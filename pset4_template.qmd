@@ -148,19 +148,140 @@ chart_unique_per_year.display()
     b.The comparison between the total number of hospitals and the number of unique hospitals reveals that the data is highly consistent across the years. In both plots, the number of hospitals remains almost unchanged from 2016 to 2019, with the total number of hospitals and unique hospitals being very close to each other. This suggests that most hospitals were consistently present throughout the time period, indicating minimal new entries or exits from the dataset. The stability in both total and unique counts highlights that the healthcare system had little fluctuation in terms of hospital availability, pointing to a continuous and stable system over these years.
 
 
-
 ## Identify hospital closures in POS file (15 pts) (*)
 
 1. 
+
+```{python}
+import pandas as pd
+
+file_paths = ["pos2016.csv", "pos2017.csv", "pos2018.csv", "pos2019.csv"]
+
+dataframes = []
+for file_path in file_paths:
+    try:
+        df = pd.read_csv(file_path, encoding="utf-8")
+    except UnicodeDecodeError:
+        df = pd.read_csv(file_path, encoding="ISO-8859-1")
+    dataframes.append(df)
+
+active_code = 0
+short_term_category_code = 1
+short_term_subtype_code = 1
+
+active_hospitals_2016 = dataframes[0][
+    (dataframes[0]["PGM_TRMNTN_CD"] == active_code)
+    & (dataframes[0]["PRVDR_CTGRY_CD"] == short_term_category_code)
+    & (dataframes[0]["PRVDR_CTGRY_SBTYP_CD"] == short_term_subtype_code)
+]
+
+suspected_closures = []
+
+merged_df = active_hospitals_2016.merge(
+    dataframes[3], on="PRVDR_NUM", how="left", suffixes=("_2016", "_2019")
+)
+
+suspected_closures_df = merged_df[
+    merged_df["PGM_TRMNTN_CD_2019"].isna()
+    | (merged_df["PGM_TRMNTN_CD_2019"] != active_code)
+]
+
+for _, row in suspected_closures_df.iterrows():
+    suspected_closures.append(
+        {
+            "Facility Name": row["FAC_NAME_2016"],
+            "ZIP Code": row["ZIP_CD_2016"],
+            "Year of Suspected Closure": 2019,
+            "Type of Reason": 1,
+        }
+    )
+
+suspected_closures_df = pd.DataFrame(suspected_closures)
+
+num_suspected_closures_2019 = suspected_closures_df.shape[0]
+print(
+    f"Number of short-term hospitals suspected to have closed by 2019: {num_suspected_closures_2019}"
+)
 
 ```
 
 2. 
 
+```{python}
+sorted_suspected_closures_df = suspected_closures_df.sort_values(
+    by="Facility Name"
+).head(10)
+print(
+    sorted_suspected_closures_df[
+        ["Facility Name", "Year of Suspected Closure", "Type of Reason"]
+    ]
+)
+```
+
 3. 
     a.
+
+```{python}
+
+zip_code_counts_2016 = active_hospitals_2016["ZIP_CD"].value_counts()
+zip_code_counts_2019 = dataframes[3][
+    (dataframes[3]["PRVDR_CTGRY_CD"] == short_term_category_code)
+    & (dataframes[3]["PRVDR_CTGRY_SBTYP_CD"] == short_term_subtype_code)
+    & (dataframes[3]["PGM_TRMNTN_CD"] == active_code)
+]["ZIP_CD"].value_counts()
+
+filtered_suspected_closures = []
+merger_candidates = []
+for _, row in merged_df.iterrows():
+    if pd.isna(row["PGM_TRMNTN_CD_2019"]) or row["PGM_TRMNTN_CD_2019"] != active_code:
+        zip_code = row["ZIP_CD_2016"]
+        if zip_code in zip_code_counts_2016 and zip_code in zip_code_counts_2019:
+            if zip_code_counts_2019[zip_code] < zip_code_counts_2016[zip_code]:
+                filtered_suspected_closures.append(row)
+            elif row["PGM_TRMNTN_CD_2019"] == 1:
+                merger_candidates.append(row)
+        elif zip_code in zip_code_counts_2016 and zip_code not in zip_code_counts_2019:
+            filtered_suspected_closures.append(row)
+
+filtered_suspected_closures_df = pd.DataFrame(filtered_suspected_closures)
+merger_candidates_df = pd.DataFrame(merger_candidates)
+
+num_merger_candidates = merger_candidates_df.shape[0]
+print(
+    f"Number of hospitals potentially involved in a merger/acquisition: {num_merger_candidates}"
+)
+
+num_filtered_suspected_closures = filtered_suspected_closures_df.shape[0]
+print(
+    f"Filtered number of short-term hospitals suspected to have closed by 2019: {num_filtered_suspected_closures}"
+)
+
+```
+
     b.
+
+```{python}
+# Question 3b: Display the number of hospitals left after correcting for potential mergers/acquisitions
+num_filtered_suspected_closures = filtered_suspected_closures_df.shape[0]
+print(f"Number of hospitals left after correcting for potential mergers/acquisitions: {num_filtered_suspected_closures}")
+
+```
+    
     c.
+
+```{python}
+filtered_suspected_closures_df["Year of Suspected Closure"] = 2019
+
+sorted_filtered_closures = filtered_suspected_closures_df.sort_values(
+    by="FAC_NAME_2016"
+).head(10)
+
+print(
+    sorted_filtered_closures[
+        ["FAC_NAME_2016", "ZIP_CD_2016", "Year of Suspected Closure"]
+    ]
+)
+```
 
 ## Download Census zip code shapefile (10 pt) 
 
