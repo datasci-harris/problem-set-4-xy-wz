@@ -286,9 +286,68 @@ print(
 ## Download Census zip code shapefile (10 pt) 
 
 1. 
-    a.
+    a. The .dbf file is a database file that stores attribute data for each geographical feature, similar to a spreadsheet, which allows you to access information like names, zip codes, or other attributes associated with each shape. The .prj file contains the projection information, which defines the coordinate system used by the shapefile. This is crucial for aligning the data with other geographic datasets properly. The .shp file is the main shape file and stores the actual geometry, including the coordinates that define the spatial features like points, lines, and polygons. The .shx file is an index file that provides a positional index of the geometries in the .shp file, enabling faster data access and locating features within the dataset. Lastly, the .xml file contains metadata, which offers descriptions and additional information about the shapefile, such as field definitions and projection details, helping to understand the dataset more effectively.
     b. 
+
+    ```{python}
+
+    import os
+    
+    directory_path = '/Users/cynthia/Desktop/gz_2010_us_860_00_500k'
+    
+    file_names = [
+    'gz_2010_us_860_00_500k.dbf',
+    'gz_2010_us_860_00_500k.prj',
+    'gz_2010_us_860_00_500k.shp',
+    'gz_2010_us_860_00_500k.shx',
+    'gz_2010_us_860_00_500k.xml'
+    ]
+    
+    for file in file_names:
+        file_path = os.path.join(directory_path, file)
+        
+        if os.path.exists(file_path): 
+            size_bytes = os.path.getsize(file_path)
+            size_mb = size_bytes / (1024 * 1024)
+            print(f"{file}: {size_mb:.2f} MB")
+        else:
+            print(f"File not found: {file_path}")
+    
+    ```
+
 2. 
+
+```{python}
+import os
+import matplotlib.pyplot as plt
+import geopandas as gpd
+import pandas as pd
+
+base_path = "/Users/cynthia/Desktop"
+
+pathshp = os.path.join(base_path, "gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.shp")
+df_shp = gpd.read_file(pathshp)
+
+df_texas = df_shp[df_shp["ZCTA5"].str.startswith(('75', '76', '77', '78', '79'))]
+df_texas['ZCTA5'] = df_texas['ZCTA5'].astype(str)
+
+hospital_2016 = pos2016[(pos2016['PRVDR_CTGRY_CD'] == 1) & (pos2016['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+
+hospital_2016['ZIP_CD'] = hospital_2016['ZIP_CD'].astype(str).str.replace(r'\.0$', '', regex=True).str.zfill(5)
+
+hospital_zip = hospital_2016.groupby('ZIP_CD').size().reset_index(name='hospital_count')
+
+map_texas = df_texas.merge(hospital_zip, left_on='ZCTA5', right_on='ZIP_CD', how='left')
+map_texas['hospital_count'] = map_texas['hospital_count'].fillna(0)
+
+fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+map_texas.plot(column='hospital_count', cmap='viridis', linewidth=0.8, ax=ax, edgecolor='0.8', legend=True)
+ax.set_title('Number of Hospitals per ZIP Code in Texas (2016)', fontsize=15)
+plt.axis('off')
+plt.show()
+
+```
+
 
 ## Calculate zip code’s distance to the nearest hospital (20 pts) (*)
 
