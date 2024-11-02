@@ -101,8 +101,8 @@ observations_per_year = all_years.groupby(
     'Year').size().reset_index(name='Number_of_Hospitals')
 
 chart_observations = alt.Chart(observations_per_year).mark_bar().encode(
-    x=alt.X('Year:O', title='Year'),
-    y=alt.Y('Number_of_Hospitals:Q', title='Number of Hospitals'),
+    alt.X('Year:O', title='Year'),
+    alt.Y('Number_of_Hospitals:Q', title='Number of Hospitals'),
     tooltip=['Year', 'Number_of_Hospitals']
 ).properties(
     title='Number of Short-Term Hospitals by Year (2016-2019)',
@@ -132,8 +132,8 @@ unique_hospitals_per_year = all_years.groupby('Year')['PRVDR_NUM'].nunique().res
 unique_hospitals_per_year.columns = ['Year', 'Unique_Hospitals']
 
 chart_unique_per_year = alt.Chart(unique_hospitals_per_year).mark_bar().encode(
-    x=alt.X('Year:O', title='Year'),
-    y=alt.Y('Unique_Hospitals:Q', title='Number of Unique Hospitals'),
+    alt.X('Year:O', title='Year'),
+    alt.Y('Unique_Hospitals:Q', title='Number of Unique Hospitals'),
     tooltip=['Year', 'Unique_Hospitals']
 ).properties(
     title='Number of Unique Short-Term Hospitals by Year (2016-2019)',
@@ -152,7 +152,11 @@ chart_unique_per_year.display()
 ## Identify hospital closures in POS file (15 pts) (*)
 
 1. 
+
+```
+
 2. 
+
 3. 
     a.
     b.
