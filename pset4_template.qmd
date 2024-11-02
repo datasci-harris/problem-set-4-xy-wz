@@ -64,8 +64,8 @@ STATE_CD (State Code)
     
     short_term_hospitals_2016 = pos2016[(pos2016['PRVDR_CTGRY_CD'] == 1) & (pos2016['PRVDR_CTGRY_SBTYP_CD'] == 1)]
 
-    num_hospitals = short_term_hospitals.shape[0]
-    print(f"Number of short-term hospitals in 2016: {num_hospitals}")
+    num_hospitals_2016 = short_term_hospitals_2016.shape[0]
+    print(f"Number of short-term hospitals in 2016: {num_hospitals_2016}")
 
     ```
 
@@ -80,17 +80,25 @@ STATE_CD (State Code)
 import matplotlib.pyplot as plt
 import altair as alt
 
-pos2017 = pd.read_csv('~/Desktop/problem-set-4-xy-wz/pos2017.csv', encoding='latin1')
-pos2018 = pd.read_csv('~/Desktop/problem-set-4-xy-wz/pos2018.csv', encoding='latin1')
-pos2019 = pd.read_csv('~/Desktop/problem-set-4-xy-wz/pos2019.csv', encoding='latin1')
+pos2017 = pd.read_csv(
+    '~/Desktop/problem-set-4-xy-wz/pos2017.csv', encoding='latin1')
+pos2018 = pd.read_csv(
+    '~/Desktop/problem-set-4-xy-wz/pos2018.csv', encoding='latin1')
+pos2019 = pd.read_csv(
+    '~/Desktop/problem-set-4-xy-wz/pos2019.csv', encoding='latin1')
 
-short_term_hospitals_2017 = pos2017[(pos2017['PRVDR_CTGRY_CD'] == 1) & (pos2017['PRVDR_CTGRY_SBTYP_CD'] == 1)]
-short_term_hospitals_2018 = pos2018[(pos2018['PRVDR_CTGRY_CD'] == 1) & (pos2018['PRVDR_CTGRY_SBTYP_CD'] == 1)]
-short_term_hospitals_2019 = pos2019[(pos2019['PRVDR_CTGRY_CD'] == 1) & (pos2019['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+short_term_hospitals_2017 = pos2017[(pos2017['PRVDR_CTGRY_CD'] == 1) & (
+    pos2017['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+short_term_hospitals_2018 = pos2018[(pos2018['PRVDR_CTGRY_CD'] == 1) & (
+    pos2018['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+short_term_hospitals_2019 = pos2019[(pos2019['PRVDR_CTGRY_CD'] == 1) & (
+    pos2019['PRVDR_CTGRY_SBTYP_CD'] == 1)]
 
-all_years = pd.concat([short_term_hospitals_2016, short_term_hospitals_2017, short_term_hospitals_2018, short_term_hospitals_2019], keys=['2016', '2017', '2018', '2019']).reset_index(level=0).rename(columns={'level_0': 'Year'})
+all_years = pd.concat([short_term_hospitals_2016, short_term_hospitals_2017, short_term_hospitals_2018, short_term_hospitals_2019], keys=[
+                      '2016', '2017', '2018', '2019']).reset_index(level=0).rename(columns={'level_0': 'Year'})
 
-observations_per_year = all_years.groupby('Year').size().reset_index(name='Number_of_Hospitals')
+observations_per_year = all_years.groupby(
+    'Year').size().reset_index(name='Number_of_Hospitals')
 
 chart_observations = alt.Chart(observations_per_year).mark_bar().encode(
     x=alt.X('Year:O', title='Year'),
@@ -104,13 +112,21 @@ chart_observations = alt.Chart(observations_per_year).mark_bar().encode(
 
 chart_observations.display()
 
+num_hospitals_2017 = short_term_hospitals_2017.shape[0]
+num_hospitals_2018 = short_term_hospitals_2018.shape[0]
+num_hospitals_2019 = short_term_hospitals_2019.shape[0]
+
+print(f"Number of short-term hospitals in 2017: {num_hospitals_2017}")
+print(f"Number of short-term hospitals in 2018: {num_hospitals_2018}")
+print(f"Number of short-term hospitals in 2019: {num_hospitals_2019}")
+
+
 ```
 
 
 4. 
     a.
 ```{python}
-
 
 unique_hospitals_per_year = all_years.groupby('Year')['PRVDR_NUM'].nunique().reset_index()
 unique_hospitals_per_year.columns = ['Year', 'Unique_Hospitals']
@@ -129,7 +145,8 @@ chart_unique_per_year.display()
 
 ```
 
-    b.
+    b.The comparison between the total number of hospitals and the number of unique hospitals reveals that the data is highly consistent across the years. In both plots, the number of hospitals remains almost unchanged from 2016 to 2019, with the total number of hospitals and unique hospitals being very close to each other. This suggests that most hospitals were consistently present throughout the time period, indicating minimal new entries or exits from the dataset. The stability in both total and unique counts highlights that the healthcare system had little fluctuation in terms of hospital availability, pointing to a continuous and stable system over these years.
+
 
 
 ## Identify hospital closures in POS file (15 pts) (*)
