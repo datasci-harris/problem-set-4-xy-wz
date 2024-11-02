@@ -260,9 +260,11 @@ print(
     b.
 
 ```{python}
-# Question 3b: Display the number of hospitals left after correcting for potential mergers/acquisitions
+
 num_filtered_suspected_closures = filtered_suspected_closures_df.shape[0]
-print(f"Number of hospitals left after correcting for potential mergers/acquisitions: {num_filtered_suspected_closures}")
+print(
+    f"Number of hospitals left after correcting for potential mergers/acquisitions: {num_filtered_suspected_closures}"
+)
 
 ```
     
@@ -545,6 +547,7 @@ else:
     b.
 
 ```{python}
+conversion_factor = 0.000621371
 
 all_distance_results["Nearest_Hospital_Distance_Miles"] = (
     all_distance_results["Nearest_Hospital_Distance"] * conversion_factor
