@@ -292,7 +292,11 @@ print(
 
     import os
     
+<<<<<<< HEAD
+    directory_path = '/Users/hahei/Desktop/gz_2010_us_860_00_500k'
+=======
     directory_path = '~/Desktop/gz_2010_us_860_00_500k‘
+>>>>>>> 20066b65cce4d21811238ffc904f4822bd99aba3
     
     file_names = [
     'gz_2010_us_860_00_500k.dbf',
@@ -320,25 +324,45 @@ print(
 import matplotlib.pyplot as plt
 import geopandas as gpd
 
+<<<<<<< HEAD
+base_path = "/Users/hahei/Desktop/gz_2010_us_860_00_500k"
+
+pathshp = os.path.join(base_path, "gz_2010_us_860_00_500k.shp")
+=======
 pathshp = ‘~/Desktop/gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.shp’
+>>>>>>> 20066b65cce4d21811238ffc904f4822bd99aba3
 df_shp = gpd.read_file(pathshp)
 
-df_texas = df_shp[df_shp["ZCTA5"].str.startswith(('75', '76', '77', '78', '79'))]
-df_texas['ZCTA5'] = df_texas['ZCTA5'].astype(str)
+df_texas = df_shp[df_shp["ZCTA5"].str.startswith(("75", "76", "77", "78", "79"))]
+df_texas["ZCTA5"] = df_texas["ZCTA5"].astype(str)
 
-hospital_2016 = pos2016[(pos2016['PRVDR_CTGRY_CD'] == 1) & (pos2016['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+hospital_2016 = pos2016[
+    (pos2016["PRVDR_CTGRY_CD"] == 1) & (pos2016["PRVDR_CTGRY_SBTYP_CD"] == 1)
+]
 
-hospital_2016['ZIP_CD'] = hospital_2016['ZIP_CD'].astype(str).str.replace(r'\.0$', '', regex=True).str.zfill(5)
+hospital_2016["ZIP_CD"] = (
+    hospital_2016["ZIP_CD"]
+    .astype(str)
+    .str.replace(r"\.0$", "", regex=True)
+    .str.zfill(5)
+)
 
-hospital_zip = hospital_2016.groupby('ZIP_CD').size().reset_index(name='hospital_count')
+hospital_zip = hospital_2016.groupby("ZIP_CD").size().reset_index(name="hospital_count")
 
-map_texas = df_texas.merge(hospital_zip, left_on='ZCTA5', right_on='ZIP_CD', how='left')
-map_texas['hospital_count'] = map_texas['hospital_count'].fillna(0)
+map_texas = df_texas.merge(hospital_zip, left_on="ZCTA5", right_on="ZIP_CD", how="left")
+map_texas["hospital_count"] = map_texas["hospital_count"].fillna(0)
 
 fig, ax = plt.subplots(1, 1, figsize=(12, 10))
-map_texas.plot(column='hospital_count', cmap='viridis', linewidth=0.8, ax=ax, edgecolor='0.8', legend=True)
-ax.set_title('Number of Hospitals per ZIP Code in Texas (2016)', fontsize=15)
-plt.axis('off')
+map_texas.plot(
+    column="hospital_count",
+    cmap="viridis",
+    linewidth=0.8,
+    ax=ax,
+    edgecolor="0.8",
+    legend=True,
+)
+ax.set_title("Number of Hospitals per ZIP Code in Texas (2016)", fontsize=15)
+plt.axis("off")
 plt.show()
 
 ```
@@ -347,15 +371,235 @@ plt.show()
 ## Calculate zip code’s distance to the nearest hospital (20 pts) (*)
 
 1. 
+
+```{python}
+base_path = "/Users/hahei/Desktop/gz_2010_us_860_00_500k"
+shapefile_path = os.path.join(base_path, "gz_2010_us_860_00_500k.shp")
+
+gdf = gpd.read_file(shapefile_path)
+
+zips_all_centroids = gdf.copy()
+zips_all_centroids["geometry"] = gdf.centroid
+
+print("GeoDataFrame dimensionality:", zips_all_centroids.shape)
+print("GeoDataFrame Column information:")
+print(zips_all_centroids.columns)
+
+print(zips_all_centroids.head())
+
+```
+
+
 2. 
+
+```{python}
+texas_prefixes = ("75", "76", "77", "78", "79")
+
+zips_texas_centroids = zips_all_centroids[
+    zips_all_centroids["ZCTA5"].str.startswith(texas_prefixes)
+]
+num_unique_texas_zips = zips_texas_centroids["ZCTA5"].nunique()
+print(f"Number of unique zip codes in Texas: {num_unique_texas_zips}")
+
+bordering_state_prefixes = (
+    "70",
+    "71",
+    "72",
+    "73",
+    "74",
+    "75",
+    "76",
+    "77",
+    "78",
+    "79",
+    "87",
+    "88",
+)
+
+zips_texas_borderstates_centroids = zips_all_centroids[
+    zips_all_centroids["ZCTA5"].str.startswith(bordering_state_prefixes)
+]
+num_unique_borderstate_zips = zips_texas_borderstates_centroids["ZCTA5"].nunique()
+print(
+    f"Number of unique zip codes in Texas and bordering states: {num_unique_borderstate_zips}"
+)
+
+```
+
 3. 
+
+```{python}
+pos2016_path = "pos2016.csv"
+pos2016_df = pd.read_csv(pos2016_path)
+
+short_term_category_code = 1
+short_term_subtype_code = 1
+active_code = 0
+
+active_hospitals_2016 = pos2016_df[
+    (pos2016_df['PRVDR_CTGRY_CD'] == short_term_category_code) &
+    (pos2016_df['PRVDR_CTGRY_SBTYP_CD'] == short_term_subtype_code) &
+    (pos2016_df['PGM_TRMNTN_CD'] == active_code)
+]
+
+active_hospitals_2016 = active_hospitals_2016.copy()
+
+active_hospitals_2016['ZIP_CD'] = active_hospitals_2016['ZIP_CD'].fillna(0).astype(int).astype(str).str.zfill(5)
+
+hospital_counts = active_hospitals_2016['ZIP_CD'].value_counts().reset_index()
+hospital_counts.columns = ['ZCTA5', 'hospital_count']
+
+zips_with_hospitals = hospital_counts[hospital_counts['hospital_count'] >= 1]
+
+zips_withhospital_centroids = zips_texas_borderstates_centroids.merge(
+    zips_with_hospitals, on='ZCTA5', how='inner'
+)
+
+print(zips_withhospital_centroids.head())
+print(f"Number of zip codes with at least 1 hospital in 2016: {zips_withhospital_centroids.shape[0]}")
+
+```
+
+
 4. 
     a.
+
+```{python}
+
+zips_texas_centroids = zips_texas_centroids.to_crs(epsg=3857)
+zips_withhospital_centroids = zips_withhospital_centroids.to_crs(epsg=3857)
+
+test_zips = zips_texas_centroids.head(10)
+
+start_time = time.time()
+
+distances = []
+
+for _, test_zip in test_zips.iterrows():
+    test_geometry = test_zip["geometry"]
+
+    min_distance = zips_withhospital_centroids["geometry"].distance(test_geometry).min()
+
+    distances.append(
+        {"ZCTA5": test_zip["ZCTA5"], "Nearest_Hospital_Distance": min_distance}
+    )
+
+end_time = time.time()
+
+execution_time = end_time - start_time
+print(f"Time taken for 10 zip codes: {execution_time:.2f} seconds")
+
+distance_results = pd.DataFrame(distances)
+print(distance_results)
+
+total_zip_codes = len(zips_texas_centroids)
+estimated_time = (execution_time / 10) * total_zip_codes
+print(f"Estimated time for all zip codes in Texas: {estimated_time / 60:.2f} minutes")
+
+```
+
     b.
+
+```{python}
+
+start_time = time.time()
+
+all_distances = []
+
+for _, texas_zip in zips_texas_centroids.iterrows():
+    texas_geometry = texas_zip["geometry"]
+
+    min_distance = (
+        zips_withhospital_centroids["geometry"].distance(texas_geometry).min()
+    )
+
+    all_distances.append(
+        {"ZCTA5": texas_zip["ZCTA5"], "Nearest_Hospital_Distance": min_distance}
+    )
+
+end_time = time.time()
+
+execution_time = end_time - start_time
+print(f"Time taken for all zip codes in Texas: {execution_time:.2f} seconds")
+
+all_distance_results = pd.DataFrame(all_distances)
+print(all_distance_results.head())
+
+all_distance_results.to_csv("texas_zipcode_hospital_distances.csv", index=False)
+
+estimated_time = (0.08 / 10) * len(zips_texas_centroids)
+print(f"Estimated time for all zip codes in Texas: {estimated_time:.2f} seconds")
+
+if execution_time <= estimated_time:
+    print("Actual execution time is less than or close to the estimated time.")
+else:
+    print("Actual execution time is greater than the estimated time.")
+
+```
+
 5. 
     a.
+    ### Ans: The unit in the .prj file is Degree.
+
+
     b.
+
+```{python}
+
+all_distance_results["Nearest_Hospital_Distance_Miles"] = (
+    all_distance_results["Nearest_Hospital_Distance"] * conversion_factor
+)
+
+average_distance_miles = all_distance_results["Nearest_Hospital_Distance_Miles"].mean()
+print(
+    f"Average distance to the nearest hospital in Texas (in miles): {average_distance_miles:.2f} miles"
+)
+
+if average_distance_miles < 30:
+    print(
+        "This value makes sense, considering the distribution of hospitals and rural areas in Texas."
+    )
+else:
+    print(
+        "This value seems unusually high, possibly indicating a lack of hospitals in some areas."
+    )
+
+```
+
     c.
+
+```{python}
+
+base_path = "/Users/hahei/Desktop/gz_2010_us_860_00_500k"
+pathshp = os.path.join(base_path, "gz_2010_us_860_00_500k.shp")
+df_shp = gpd.read_file(pathshp)
+
+df_texas = df_shp[df_shp["ZCTA5"].str.startswith(("75", "76", "77", "78", "79"))]
+df_texas["ZCTA5"] = df_texas["ZCTA5"].astype(str)
+
+df_texas_distance = df_texas.merge(
+    all_distance_results[["ZCTA5", "Nearest_Hospital_Distance_Miles"]],
+    on="ZCTA5",
+    how="left"
+)
+
+df_texas_distance["Nearest_Hospital_Distance_Miles"] = df_texas_distance["Nearest_Hospital_Distance_Miles"].fillna(0)
+
+fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+df_texas_distance.plot(
+    column="Nearest_Hospital_Distance_Miles",
+    cmap="OrRd",  
+    linewidth=0.8,
+    ax=ax,
+    edgecolor="0.8",
+    legend=True,
+)
+
+ax.set_title("Distance to Nearest Hospital by Zip Code in Texas (in Miles)", fontsize=15)
+plt.axis("off")
+
+plt.show()
+```
     
 ## Effects of closures on access in Texas (15 pts)
 
