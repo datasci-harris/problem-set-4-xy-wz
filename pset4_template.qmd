@@ -360,8 +360,43 @@ plt.show()
 ## Effects of closures on access in Texas (15 pts)
 
 1. 
+
+```{python}
+
+file_paths = ["pos2016.csv", "pos2017.csv", "pos2018.csv", "pos2019.csv"]
+
+dataframes = [pd.read_csv(file_path, encoding='latin1') for file_path in file_paths]
+pos_data = pd.concat(dataframes, ignore_index=True)
+
+pos_data = pos_data.drop_duplicates(subset=['PRVDR_NUM', 'PGM_TRMNTN_CD'])
+
+closures_2016_2019 = pos_data[(pos_data['PRVDR_CTGRY_CD'] == 1) & (pos_data['PGM_TRMNTN_CD'] == 1)].copy()
+closures_2016_2019['ZIP_CD'] = closures_2016_2019['ZIP_CD'].astype(str).str.replace(r'\.0$', '', regex=True).str.zfill(5)
+closures_texas = closures_2016_2019[closures_2016_2019['ZIP_CD'].str.startswith(('75', '76', '77', '78', '79'))].copy()
+
+closures_zip = closures_texas.groupby('ZIP_CD')['PRVDR_NUM'].nunique().reset_index(name='closure_count')
+
+zip_closure_table = closures_zip.groupby('closure_count').size().reset_index(name='number_of_zip_codes')
+print(zip_closure_table)
+
+```
+
 2. 
+
+```{python}
+
+```
+
 3. 
+
+```{python}
+
+```
+
 4. 
+
+```{python}
+
+```
 
 ## Reflecting on the exercise (10 pts) 
