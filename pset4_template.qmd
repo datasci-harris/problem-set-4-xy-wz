@@ -1,5 +1,5 @@
 ---
-title: "Your Title"
+title: "Problem-set-4"
 format: 
   pdf:
     keep-tex: true
@@ -44,10 +44,59 @@ Please refer to the minilesson on code style
 ## Download and explore the Provider of Services (POS) file (10 pts)
 
 1. 
+PRVDR_CTGRY_SBTYP_CD (Provider Category Subtype Code)
+PRVDR_CTGRY_CD (Provider Category Code)
+PRVDR_NUM (CMS Certification Number)
+FAC_NAME (Facility Name)
+ZIP_CD (Address: Zip Code)
+PGM_TRMNTN_CD (Terpmination Code)
+TRMNTN_EXPRTN_DT (Termination Expiration Date)
+STATE_CD (State Code)
+
 2. 
     a.
+
+    ```{python}
+    
+    import pandas as pd
+
+    file_path_2016 = '/Users/cynthia/Desktop/problem-set-4-xy-wz/pos2016.csv'
+    pos2016 = pd.read_csv(file_path)
+    
+    short_term_hospitals = pos2016[(pos2016['PRVDR_CTGRY_CD'] == 1) & (pos2016['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+
+    num_hospitals = short_term_hospitals.shape[0]
+    print(f"Number of short-term hospitals in 2016: {num_hospitals}")
+
+    ```
     b.
+
 3. 
+
+```{python}
+import matplotlib.pyplot as plt
+
+file_path_2017 = '/Users/cynthia/Desktop/problem-set-4-xy-wz/pos2017.csv'
+file_path_2018 = '/Users/cynthia/Desktop/problem-set-4-xy-wz/pos2018.csv'
+file_path_2019 = '/Users/cynthia/Desktop/problem-set-4-xy-wz/pos2019.csv'
+
+pos2016 = pd.read_csv(file_path_2016)
+pos2017 = pd.read_csv(file_path_2017)
+pos2018 = pd.read_csv(file_path_2018)
+pos2019 = pd.read_csv(file_path_2019)
+
+short_term_2016 = pos2016[(pos2016['PRVDR_CTGRY_CD'] == 1) & (pos2016['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+short_term_2017 = pos2017[(pos2017['PRVDR_CTGRY_CD'] == 1) & (pos2017['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+short_term_2018 = pos2018[(pos2018['PRVDR_CTGRY_CD'] == 1) & (pos2018['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+short_term_2019 = pos2019[(pos2019['PRVDR_CTGRY_CD'] == 1) & (pos2019['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+
+all_years = pd.concat([short_term_2016, short_term_2017, short_term_2018, short_term_2019], keys=['2016', '2017', '2018', '2019'], names=['Year'])
+
+observations_by_year = all_years.reset_index().groupby('Year').size()
+observations_by_year.plot(kind='bar', title='Number of Short-Term Hospitals by Year', xlabel='Year', ylabel='Number of Hospitals')
+plt.show()
+
+```
 4. 
     a.
     b.
