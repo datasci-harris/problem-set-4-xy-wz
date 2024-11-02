@@ -153,7 +153,6 @@ chart_unique_per_year.display()
 1. 
 
 ```{python}
-import pandas as pd
 
 file_paths = ["pos2016.csv", "pos2017.csv", "pos2018.csv", "pos2019.csv"]
 
@@ -293,7 +292,7 @@ print(
 
     import os
     
-    directory_path = '/Users/cynthia/Desktop/gz_2010_us_860_00_500k'
+    directory_path = '~/Desktop/gz_2010_us_860_00_500k‘
     
     file_names = [
     'gz_2010_us_860_00_500k.dbf',
@@ -318,14 +317,10 @@ print(
 2. 
 
 ```{python}
-import os
 import matplotlib.pyplot as plt
 import geopandas as gpd
-import pandas as pd
 
-base_path = "/Users/cynthia/Desktop"
-
-pathshp = os.path.join(base_path, "gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.shp")
+pathshp = ‘~/Desktop/gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.shp’
 df_shp = gpd.read_file(pathshp)
 
 df_texas = df_shp[df_shp["ZCTA5"].str.startswith(('75', '76', '77', '78', '79'))]
