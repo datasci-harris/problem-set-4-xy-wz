@@ -153,7 +153,6 @@ chart_unique_per_year.display()
 1. 
 
 ```{python}
-
 file_paths = ["pos2016.csv", "pos2017.csv", "pos2018.csv", "pos2019.csv"]
 
 dataframes = [pd.read_csv(file_path, encoding="latin1") for file_path in file_paths]
@@ -168,28 +167,63 @@ active_hospitals_2016 = dataframes[0][
     & (dataframes[0]["PRVDR_CTGRY_SBTYP_CD"] == short_term_subtype_code)
 ]
 
-suspected_closures = []
-
-merged_df = active_hospitals_2016.merge(
-    dataframes[3], on="PRVDR_NUM", how="left", suffixes=("_2016", "_2019")
+merged_df = (
+    active_hospitals_2016.merge(
+        dataframes[1][["PRVDR_NUM", "PGM_TRMNTN_CD"]].rename(
+            columns={"PGM_TRMNTN_CD": "PGM_TRMNTN_CD_2017"}
+        ),
+        on="PRVDR_NUM",
+        how="left",
+    )
+    .merge(
+        dataframes[2][["PRVDR_NUM", "PGM_TRMNTN_CD"]].rename(
+            columns={"PGM_TRMNTN_CD": "PGM_TRMNTN_CD_2018"}
+        ),
+        on="PRVDR_NUM",
+        how="left",
+    )
+    .merge(
+        dataframes[3][["PRVDR_NUM", "PGM_TRMNTN_CD"]].rename(
+            columns={"PGM_TRMNTN_CD": "PGM_TRMNTN_CD_2019"}
+        ),
+        on="PRVDR_NUM",
+        how="left",
+    )
 )
 
-suspected_closures_df = merged_df[
-    merged_df["PGM_TRMNTN_CD_2019"].isna()
-    | (merged_df["PGM_TRMNTN_CD_2019"] != active_code)
-]
+suspected_closures = []
 
-for _, row in suspected_closures_df.iterrows():
-    suspected_closures.append(
-        {
-            "Facility Name": row["FAC_NAME_2016"],
-            "ZIP Code": row["ZIP_CD_2016"],
-            "Year of Suspected Closure": 2019,
-            "Type of Reason": 1,
-        }
-    )
+for _, row in merged_df.iterrows():
+    closure_year = None
+    if pd.isna(row["PGM_TRMNTN_CD_2017"]) or row["PGM_TRMNTN_CD_2017"] != active_code:
+        closure_year = 2017
+    elif pd.isna(row["PGM_TRMNTN_CD_2018"]) or row["PGM_TRMNTN_CD_2018"] != active_code:
+        closure_year = 2018
+    elif pd.isna(row["PGM_TRMNTN_CD_2019"]) or row["PGM_TRMNTN_CD_2019"] != active_code:
+        closure_year = 2019
 
-suspected_closures_df = pd.DataFrame(suspected_closures)
+    if closure_year:
+        suspected_closures.append(
+            {
+                "Facility Name": row["FAC_NAME"],
+                "ZIP Code": row["ZIP_CD"],
+                "Year of Suspected Closure": closure_year,
+                "Type of Reason": 1,
+                "PRVDR_NUM": row["PRVDR_NUM"],
+            }
+        )
+
+suspected_closures_df = pd.DataFrame(
+    suspected_closures,
+    columns=[
+        "FAC_NAME",
+        "ZIP Code",
+        "Year of Suspected Closure",
+        "PRVDR_NUM",
+        "Type of Reason",
+    ],
+)
+
 
 num_suspected_closures_2019 = suspected_closures_df.shape[0]
 print(
@@ -206,7 +240,7 @@ sorted_suspected_closures_df = suspected_closures_df.sort_values(
 ).head(10)
 print(
     sorted_suspected_closures_df[
-        ["Facility Name", "Year of Suspected Closure", "Type of Reason"]
+        ["Facility Name", "Year of Suspected Closure", "ZIP Code", "PRVDR_NUM"]
     ]
 )
 ```
@@ -215,26 +249,46 @@ print(
     a.
 
 ```{python}
+zip_counts = pd.DataFrame()
+for year, df in enumerate(dataframes, start=2016):
+    active_counts = (
+        df[
+            (df["PRVDR_CTGRY_CD"] == short_term_category_code)
+            & (df["PRVDR_CTGRY_SBTYP_CD"] == short_term_subtype_code)
+            & (df["PGM_TRMNTN_CD"] == active_code)
+        ]
+        .groupby("ZIP_CD")["PRVDR_NUM"]
+        .count()
+        .reset_index()
+    )
+    active_counts.columns = ["ZIP_CD", f"Active_Count_{year}"]
 
-zip_code_counts_2016 = active_hospitals_2016["ZIP_CD"].value_counts()
-zip_code_counts_2019 = dataframes[3][
-    (dataframes[3]["PRVDR_CTGRY_CD"] == short_term_category_code)
-    & (dataframes[3]["PRVDR_CTGRY_SBTYP_CD"] == short_term_subtype_code)
-    & (dataframes[3]["PGM_TRMNTN_CD"] == active_code)
-]["ZIP_CD"].value_counts()
+    if zip_counts.empty:
+        zip_counts = active_counts
+    else:
+        zip_counts = zip_counts.merge(active_counts, on="ZIP_CD", how="outer").fillna(0)
 
 filtered_suspected_closures = []
 merger_candidates = []
-for _, row in merged_df.iterrows():
-    if pd.isna(row["PGM_TRMNTN_CD_2019"]) or row["PGM_TRMNTN_CD_2019"] != active_code:
-        zip_code = row["ZIP_CD_2016"]
-        if zip_code in zip_code_counts_2016 and zip_code in zip_code_counts_2019:
-            if zip_code_counts_2019[zip_code] < zip_code_counts_2016[zip_code]:
-                filtered_suspected_closures.append(row)
-            elif row["PGM_TRMNTN_CD_2019"] == 1:
-                merger_candidates.append(row)
-        elif zip_code in zip_code_counts_2016 and zip_code not in zip_code_counts_2019:
+
+for _, row in suspected_closures_df.iterrows():
+    zip_code = row["ZIP Code"]
+    closure_year = row["Year of Suspected Closure"]
+
+    if closure_year < 2019:
+        current_count = zip_counts.loc[
+            zip_counts["ZIP_CD"] == zip_code, f"Active_Count_{closure_year}"
+        ].values[0]
+        next_year_count = zip_counts.loc[
+            zip_counts["ZIP_CD"] == zip_code, f"Active_Count_{closure_year + 1}"
+        ].values[0]
+
+        if next_year_count >= current_count:
+            merger_candidates.append(row)
+        else:
             filtered_suspected_closures.append(row)
+    else:
+        filtered_suspected_closures.append(row)
 
 filtered_suspected_closures_df = pd.DataFrame(filtered_suspected_closures)
 merger_candidates_df = pd.DataFrame(merger_candidates)
@@ -244,12 +298,9 @@ print(
     f"Number of hospitals potentially involved in a merger/acquisition: {num_merger_candidates}"
 )
 
-num_filtered_suspected_closures = filtered_suspected_closures_df.shape[0]
-print(
-    f"Filtered number of short-term hospitals suspected to have closed by 2019: {num_filtered_suspected_closures}"
-)
-
 ```
+
+
 
     b. 
 
@@ -264,17 +315,14 @@ print(
     
     c.
 ```{python}
-filtered_suspected_closures_df["Year of Suspected Closure"] = 2019
-
 sorted_filtered_closures = filtered_suspected_closures_df.sort_values(
-    by="FAC_NAME_2016"
+    by="Facility Name"
 ).head(10)
 
 print(
-    sorted_filtered_closures[
-        ["FAC_NAME_2016", "ZIP_CD_2016", "Year of Suspected Closure"]
-    ]
+    sorted_filtered_closures[["Facility Name", "ZIP Code", "Year of Suspected Closure"]]
 )
+
 ```
 
 ## Download Census zip code shapefile (10 pt) 
@@ -323,7 +371,7 @@ df_texas = df_shp[df_shp["ZCTA5"].str.startswith(("75", "76", "77", "78", "79"))
 df_texas["ZCTA5"] = df_texas["ZCTA5"].astype(str)
 
 hospital_2016 = pos2016[
-    (pos2016["PRVDR_CTGRY_CD"] == 1) & (pos2016["PRVDR_CTGRY_SBTYP_CD"] == 1)
+    (   pos2016["PRVDR_CTGRY_CD"] == 1) & (pos2016["PRVDR_CTGRY_SBTYP_CD"] == 1)
 ]
 
 hospital_2016["ZIP_CD"] = (
@@ -553,7 +601,7 @@ else:
     c.
 ```{python}
 
-base_path = "/Users/cynthia/Desktop/gz_2010_us_860_00_500k"
+base_path = "/Users/hahei/Desktop/gz_2010_us_860_00_500k"
 pathshp = os.path.join(base_path, "gz_2010_us_860_00_500k.shp")
 df_shp = gpd.read_file(pathshp)
 
