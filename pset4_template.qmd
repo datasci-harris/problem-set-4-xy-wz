@@ -30,9 +30,9 @@ Please refer to the minilesson on code style
     - Partner 1 (name and cnet ID):
     - Partner 2 (name and cnet ID):
 3. Partner 1 will accept the `ps4` and then share the link it creates with their partner. You can only share it with one partner so you will not be able to change it after your partner has accepted. 
-4. "This submission is our work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: \*\*\_\_\*\* \*\*\_\_\*\*
-5. "I have uploaded the names of anyone else other than my partner and I worked with on the problem set **[here](https://docs.google.com/forms/d/185usrCREQaUbvAXpWhChkjghdGgmAZXA3lPWpXLLsts/edit)**"  (1 point)
-6. Late coins used this pset: \*\*\_\_\*\* Late coins left after submission: \*\*\_\_\*\*
+4. "This submission is our work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: xinyi\*\*\_\_\*\* \*\*\_\_\*\*
+5. "I have uploaded the names of anyone else other than my partner and I worked with on the problem set **[here](https://docs.google.com/forms/d/185usrCREQaUbvAXpWhChkjghdGgmAZXA3lPWpXLLsts/edit)**" xyz  (1 point)
+6. Late coins used this pset: xyz\*\*\_\_\*\* Late coins left after submission: xyz\*\*\_\_\*\*
 7. Knit your `ps4.qmd` to an PDF file to make `ps4.pdf`, 
     * The PDF should not be more than 25 pages. Use `head()` and re-size figures when appropriate. 
 8. (Partner 1): push  `ps4.qmd` and `ps4.pdf` to your github repo.
@@ -71,7 +71,7 @@ STATE_CD (State Code)
 
     This number appears reasonable given that the CMS dataset is known to include all hospitals eligible to bill Medicare.
 
-    b.The number of short-term hospitals reported in the CMS POS dataset for 2016 is 7,245.  However, the Agency for Healthcare Research and Quality (AHRQ) reported 4,661 short-term acute care hospitals for the same year.  This difference might be because the CMS dataset includes all hospitals eligible to bill Medicare, while the AHRQ data only includes hospitals that meet specific criteria, like operating for at least 180 days.
+## b.The number of short-term hospitals reported in the CMS POS dataset for 2016 is 7,245.  However, the Agency for Healthcare Research and Quality (AHRQ) reported 4,661 short-term acute care hospitals for the same year.  This difference might be because the CMS dataset includes all hospitals eligible to bill Medicare, while the AHRQ data only includes hospitals that meet specific criteria, like operating for at least 180 days.
 
 
 3. 
@@ -145,7 +145,7 @@ chart_unique_per_year.display()
 
 ```
 
-    b.The comparison between the total number of hospitals and the number of unique hospitals reveals that the data is highly consistent across the years. In both plots, the number of hospitals remains almost unchanged from 2016 to 2019, with the total number of hospitals and unique hospitals being very close to each other. This suggests that most hospitals were consistently present throughout the time period, indicating minimal new entries or exits from the dataset. The stability in both total and unique counts highlights that the healthcare system had little fluctuation in terms of hospital availability, pointing to a continuous and stable system over these years.
+## b.The comparison between the total number of hospitals and the number of unique hospitals reveals that the data is highly consistent across the years. In both plots, the number of hospitals remains almost unchanged from 2016 to 2019, with the total number of hospitals and unique hospitals being very close to each other. This suggests that most hospitals were consistently present throughout the time period, indicating minimal new entries or exits from the dataset. The stability in both total and unique counts highlights that the healthcare system had little fluctuation in terms of hospital availability, pointing to a continuous and stable system over these years.
 
 
 ## Identify hospital closures in POS file (15 pts) (*)
@@ -257,7 +257,7 @@ print(
 
 ```
 
-    b.
+    b. 
 
 ```{python}
 
@@ -287,7 +287,7 @@ print(
 ## Download Census zip code shapefile (10 pt) 
 
 1. 
-    a. The .dbf file is a database file that stores attribute data for each geographical feature, similar to a spreadsheet, which allows you to access information like names, zip codes, or other attributes associated with each shape. The .prj file contains the projection information, which defines the coordinate system used by the shapefile. This is crucial for aligning the data with other geographic datasets properly. The .shp file is the main shape file and stores the actual geometry, including the coordinates that define the spatial features like points, lines, and polygons. The .shx file is an index file that provides a positional index of the geometries in the .shp file, enabling faster data access and locating features within the dataset. Lastly, the .xml file contains metadata, which offers descriptions and additional information about the shapefile, such as field definitions and projection details, helping to understand the dataset more effectively.
+    ## a. The .dbf file is a database file that stores attribute data for each geographical feature, similar to a spreadsheet, which allows you to access information like names, zip codes, or other attributes associated with each shape. The .prj file contains the projection information, which defines the coordinate system used by the shapefile. This is crucial for aligning the data with other geographic datasets properly. The .shp file is the main shape file and stores the actual geometry, including the coordinates that define the spatial features like points, lines, and polygons. The .shx file is an index file that provides a positional index of the geometries in the .shp file, enabling faster data access and locating features within the dataset. Lastly, the .xml file contains metadata, which offers descriptions and additional information about the shapefile, such as field definitions and projection details, helping to understand the dataset more effectively.
     b. 
 
     ```{python}
@@ -562,7 +562,7 @@ else:
 
 ```{python}
 
-base_path = "/Users/hahei/Desktop/gz_2010_us_860_00_500k"
+base_path = "/Users/cynthia/Desktop/gz_2010_us_860_00_500k"
 pathshp = os.path.join(base_path, "gz_2010_us_860_00_500k.shp")
 df_shp = gpd.read_file(pathshp)
 
@@ -638,11 +638,45 @@ print(f"Number of directly affected ZIP codes in Texas: {directly_affected_zip_c
 ```
 
 3. 
+```{python}
+directly_affected_gdf = df_texas[df_texas['ZCTA5'].isin(closures_zip['ZIP_CD'])].copy()
 
+directly_affected_gdf = directly_affected_gdf.to_crs(epsg=3395)
+directly_affected_gdf['geometry'] = directly_affected_gdf.geometry.buffer(16093.4)
+directly_affected_gdf = directly_affected_gdf.to_crs(epsg=4326) 
+
+indirectly_affected_gdf = gpd.sjoin(df_texas, directly_affected_gdf, how='inner', predicate='intersects')
+indirectly_affected_zip_count = indirectly_affected_gdf['ZCTA5_left'].nunique()
+
+print(f"Number of indirectly affected ZIP codes in Texas: {indirectly_affected_zip_count}")
+
+```
 4. 
 
 ```{python}
+indirectly_affected_gdf = indirectly_affected_gdf[~indirectly_affected_gdf['ZCTA5_left'].isin(closures_zip['ZIP_CD'])]
+
+df_texas['category'] = 'Not Affected'
+df_texas.loc[df_texas['ZCTA5'].isin(closures_zip['ZIP_CD']), 'category'] = 'Directly Affected'
+df_texas.loc[df_texas['ZCTA5'].isin(indirectly_affected_gdf['ZCTA5_left']), 'category'] = 'Indirectly Affected'
+
+fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+df_texas.plot(column='category', cmap='Set1', linewidth=0.8, ax=ax, edgecolor='0.8', legend=True)
+ax.set_title('Texas ZIP Codes Affected by Hospital Closures (2016-2019)', fontsize=15)
+plt.axis('off')
+plt.show()
+
+directly_affected_zip_count = closures_zip.shape[0]
+indirectly_affected_zip_count = indirectly_affected_gdf['ZCTA5_left'].nunique()
+
+print(f"Number of directly affected ZIP codes in Texas: {directly_affected_zip_count}")
+print(f"Number of indirectly affected ZIP codes in Texas: {indirectly_affected_zip_count}")
 
 ```
 
 ## Reflecting on the exercise (10 pts) 
+## Partner 1：The initial method for identifying hospital closures has several problems that could lead to mistakes. One issue is that mergers or acquisitions might be wrongly marked as closures. Hospitals that merge or are bought may get new certification numbers, which could make it seem like they closed. To improve accuracy, we could better match hospital names and addresses to identify these cases. Another issue is data delays or inconsistencies so hospitals might temporarily disappear from the data without actually closing.  Using additional data sources, like state databases, could help verify if a hospital is really closed. Relying on just one field, such as the "Termination Code," can also be risky, because errors in that field could lead to wrong conclusions.  It would be better to also consider other information, like staffing levels or available services. Some hospitals may also relocate rather than close, which could be misinterpreted as a closure. Using location data to track these changes could help. Finally, verifying closures using official sources would reduce false positives and make the analysis more reliable.
+
+
+
+
