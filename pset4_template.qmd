@@ -153,13 +153,17 @@ chart_unique_per_year.display()
 1. 
 
 ```{python}
-file_paths = ["pos2016.csv", "pos2017.csv", "pos2018.csv", "pos2019.csv"]
+import pandas as pd
 
+file_paths = ["pos2016.csv", "pos2017.csv", "pos2018.csv", "pos2019.csv"]
 dataframes = [pd.read_csv(file_path, encoding="latin1") for file_path in file_paths]
 
 active_code = 0
 short_term_category_code = 1
 short_term_subtype_code = 1
+
+for i in range(len(dataframes)):
+    dataframes[i]["PRVDR_NUM"] = dataframes[i]["PRVDR_NUM"].astype(str)
 
 active_hospitals_2016 = dataframes[0][
     (dataframes[0]["PGM_TRMNTN_CD"] == active_code)
@@ -167,28 +171,15 @@ active_hospitals_2016 = dataframes[0][
     & (dataframes[0]["PRVDR_CTGRY_SBTYP_CD"] == short_term_subtype_code)
 ]
 
-merged_df = (
-    active_hospitals_2016.merge(
-        dataframes[1][["PRVDR_NUM", "PGM_TRMNTN_CD"]].rename(
-            columns={"PGM_TRMNTN_CD": "PGM_TRMNTN_CD_2017"}
-        ),
-        on="PRVDR_NUM",
-        how="left",
-    )
-    .merge(
-        dataframes[2][["PRVDR_NUM", "PGM_TRMNTN_CD"]].rename(
-            columns={"PGM_TRMNTN_CD": "PGM_TRMNTN_CD_2018"}
-        ),
-        on="PRVDR_NUM",
-        how="left",
-    )
-    .merge(
-        dataframes[3][["PRVDR_NUM", "PGM_TRMNTN_CD"]].rename(
-            columns={"PGM_TRMNTN_CD": "PGM_TRMNTN_CD_2019"}
-        ),
-        on="PRVDR_NUM",
-        how="left",
-    )
+merged_df = active_hospitals_2016.merge(
+    dataframes[1][["PRVDR_NUM", "PGM_TRMNTN_CD"]].rename(columns={"PGM_TRMNTN_CD": "PGM_TRMNTN_CD_2017"}),
+    on="PRVDR_NUM", how="left"
+).merge(
+    dataframes[2][["PRVDR_NUM", "PGM_TRMNTN_CD"]].rename(columns={"PGM_TRMNTN_CD": "PGM_TRMNTN_CD_2018"}),
+    on="PRVDR_NUM", how="left"
+).merge(
+    dataframes[3][["PRVDR_NUM", "PGM_TRMNTN_CD"]].rename(columns={"PGM_TRMNTN_CD": "PGM_TRMNTN_CD_2019"}),
+    on="PRVDR_NUM", how="left"
 )
 
 suspected_closures = []
@@ -205,8 +196,8 @@ for _, row in merged_df.iterrows():
     if closure_year:
         suspected_closures.append(
             {
-                "Facility Name": row["FAC_NAME"],
-                "ZIP Code": row["ZIP_CD"],
+                "Facility Name": row["FAC_NAME"] if pd.notna(row["FAC_NAME"]) else "Unknown",
+                "ZIP Code": row["ZIP_CD"] if pd.notna(row["ZIP_CD"]) else "Unknown",
                 "Year of Suspected Closure": closure_year,
                 "Type of Reason": 1,
                 "PRVDR_NUM": row["PRVDR_NUM"],
@@ -214,16 +205,9 @@ for _, row in merged_df.iterrows():
         )
 
 suspected_closures_df = pd.DataFrame(
-    suspected_closures,
-    columns=[
-        "FAC_NAME",
-        "ZIP Code",
-        "Year of Suspected Closure",
-        "PRVDR_NUM",
-        "Type of Reason",
-    ],
+    suspected_closures, 
+    columns=["Facility Name", "ZIP Code", "Year of Suspected Closure", "PRVDR_NUM", "Type of Reason"]
 )
-
 
 num_suspected_closures_2019 = suspected_closures_df.shape[0]
 print(
@@ -243,6 +227,7 @@ print(
         ["Facility Name", "Year of Suspected Closure", "ZIP Code", "PRVDR_NUM"]
     ]
 )
+
 ```
 
 3. 
