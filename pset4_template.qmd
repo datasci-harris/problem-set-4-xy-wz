@@ -292,11 +292,7 @@ print(
 
     import os
     
-<<<<<<< HEAD
-    directory_path = '/Users/hahei/Desktop/gz_2010_us_860_00_500k'
-=======
-    directory_path = '~/Desktop/gz_2010_us_860_00_500k‘
->>>>>>> 20066b65cce4d21811238ffc904f4822bd99aba3
+    base_path = '/Users/cynthia/Desktop/gz_2010_us_860_00_500k'
     
     file_names = [
     'gz_2010_us_860_00_500k.dbf',
@@ -307,7 +303,7 @@ print(
     ]
     
     for file in file_names:
-        file_path = os.path.join(directory_path, file)
+        file_path = os.path.join(base_path, file)
         
         if os.path.exists(file_path): 
             size_bytes = os.path.getsize(file_path)
@@ -324,13 +320,8 @@ print(
 import matplotlib.pyplot as plt
 import geopandas as gpd
 
-<<<<<<< HEAD
-base_path = "/Users/hahei/Desktop/gz_2010_us_860_00_500k"
-
 pathshp = os.path.join(base_path, "gz_2010_us_860_00_500k.shp")
-=======
-pathshp = ‘~/Desktop/gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.shp’
->>>>>>> 20066b65cce4d21811238ffc904f4822bd99aba3
+pathshp = '~/Desktop/gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.shp'
 df_shp = gpd.read_file(pathshp)
 
 df_texas = df_shp[df_shp["ZCTA5"].str.startswith(("75", "76", "77", "78", "79"))]
@@ -373,7 +364,7 @@ plt.show()
 1. 
 
 ```{python}
-base_path = "/Users/hahei/Desktop/gz_2010_us_860_00_500k"
+base_path = '~/Desktop/gz_2010_us_860_00_500k'
 shapefile_path = os.path.join(base_path, "gz_2010_us_860_00_500k.shp")
 
 gdf = gpd.read_file(shapefile_path)
@@ -429,17 +420,14 @@ print(
 3. 
 
 ```{python}
-pos2016_path = "pos2016.csv"
-pos2016_df = pd.read_csv(pos2016_path)
-
 short_term_category_code = 1
 short_term_subtype_code = 1
 active_code = 0
 
-active_hospitals_2016 = pos2016_df[
-    (pos2016_df['PRVDR_CTGRY_CD'] == short_term_category_code) &
-    (pos2016_df['PRVDR_CTGRY_SBTYP_CD'] == short_term_subtype_code) &
-    (pos2016_df['PGM_TRMNTN_CD'] == active_code)
+active_hospitals_2016 = pos2016[
+    (pos2016['PRVDR_CTGRY_CD'] == short_term_category_code) &
+    (pos2016['PRVDR_CTGRY_SBTYP_CD'] == short_term_subtype_code) &
+    (pos2016['PGM_TRMNTN_CD'] == active_code)
 ]
 
 active_hospitals_2016 = active_hospitals_2016.copy()
@@ -465,6 +453,7 @@ print(f"Number of zip codes with at least 1 hospital in 2016: {zips_withhospital
     a.
 
 ```{python}
+import time 
 
 zips_texas_centroids = zips_texas_centroids.to_crs(epsg=3857)
 zips_withhospital_centroids = zips_withhospital_centroids.to_crs(epsg=3857)
@@ -622,20 +611,30 @@ closures_zip = closures_texas.groupby('ZIP_CD')['PRVDR_NUM'].nunique().reset_ind
 
 zip_closure_table = closures_zip.groupby('closure_count').size().reset_index(name='number_of_zip_codes')
 print(zip_closure_table)
-
 ```
 
 2. 
 
 ```{python}
+pathshp = '~/Desktop/gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.shp'
+df_texas = gpd.read_file(pathshp)
+df_texas = df_texas[df_texas["ZCTA5"].str.startswith(('75', '76', '77', '78', '79'))]
+df_texas['ZCTA5'] = df_texas['ZCTA5'].astype(str)
 
+map_texas = df_texas.merge(closures_zip, left_on='ZCTA5', right_on='ZIP_CD', how='left')
+map_texas['closure_count'] = map_texas['closure_count'].fillna(0)
+
+fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+map_texas.plot(column='closure_count', cmap='OrRd', linewidth=0.8, ax=ax, edgecolor='0.8', legend=True)
+ax.set_title('Texas ZIP Codes Directly Affected by Hospital Closures (2016-2019)', fontsize=15)
+plt.axis('off')
+plt.show()
+
+directly_affected_zip_count = closures_zip.shape[0]
+print(f"Number of directly affected ZIP codes in Texas: {directly_affected_zip_count}")
 ```
 
 3. 
-
-```{python}
-
-```
 
 4. 
 
