@@ -30,9 +30,9 @@ Please refer to the minilesson on code style
     - Partner 1 (name and cnet ID):
     - Partner 2 (name and cnet ID):
 3. Partner 1 will accept the `ps4` and then share the link it creates with their partner. You can only share it with one partner so you will not be able to change it after your partner has accepted. 
-4. "This submission is our work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: xinyi\*\*\_\_\*\* \*\*\_\_\*\*
-5. "I have uploaded the names of anyone else other than my partner and I worked with on the problem set **[here](https://docs.google.com/forms/d/185usrCREQaUbvAXpWhChkjghdGgmAZXA3lPWpXLLsts/edit)**" xyz  (1 point)
-6. Late coins used this pset: xyz\*\*\_\_\*\* Late coins left after submission: xyz\*\*\_\_\*\*
+4. "This submission is our work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: xinyi wuzhen\*\*\_\_\*\* \*\*\_\_\*\*
+5. "I have uploaded the names of anyone else other than my partner and I worked with on the problem set **[here](https://docs.google.com/forms/d/185usrCREQaUbvAXpWhChkjghdGgmAZXA3lPWpXLLsts/edit)**" xyz wuzhen  (1 point)
+6. Late coins used this pset: xyz\*\*\_\_\*\* Late coins left after submission: xyz wuzhen\*\*\_\_\*\*
 7. Knit your `ps4.qmd` to an PDF file to make `ps4.pdf`, 
     * The PDF should not be more than 25 pages. Use `head()` and re-size figures when appropriate. 
 8. (Partner 1): push  `ps4.qmd` and `ps4.pdf` to your github repo.
@@ -677,6 +677,6 @@ print(f"Number of indirectly affected ZIP codes in Texas: {indirectly_affected_z
 ## Reflecting on the exercise (10 pts) 
 ## Partner 1：The initial method for identifying hospital closures has several problems that could lead to mistakes. One issue is that mergers or acquisitions might be wrongly marked as closures. Hospitals that merge or are bought may get new certification numbers, which could make it seem like they closed. To improve accuracy, we could better match hospital names and addresses to identify these cases. Another issue is data delays or inconsistencies so hospitals might temporarily disappear from the data without actually closing.  Using additional data sources, like state databases, could help verify if a hospital is really closed. Relying on just one field, such as the "Termination Code," can also be risky, because errors in that field could lead to wrong conclusions.  It would be better to also consider other information, like staffing levels or available services. Some hospitals may also relocate rather than close, which could be misinterpreted as a closure. Using location data to track these changes could help. Finally, verifying closures using official sources would reduce false positives and make the analysis more reliable.
 
-
+## Partner 2: The current way of identifying zip codes affected by hospital closures has some limitations. Just using distance to decide if a zip code is directly or indirectly affected may not fully capture changes in access to healthcare.  For example, two zip codes within 10 miles of a closed hospital might be affected differently depending on factors like transportation options, population density, and nearby healthcare facilities. Using only distance doesn't tell the whole story. There are some ways to improve this measure. First, include transportation factors like road access and public transit, because these influence how easily people can get to hospitals. Second, consider the capacity of nearby hospitals to handle more patients, as closures might lead to overcrowding.  Third, include population density and demographics to understand which areas might be impacted the most. Also, consider travel time cause it can provide a better sense of accessibility, especially in rural areas. Finally, take into account other healthcare facilities like clinic centers to get a more complete picture of healthcare availability after a hospital closure.
 
 
