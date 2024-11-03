@@ -27,12 +27,12 @@ Please refer to the minilesson on code style
 ## Submission Steps (10 pts)
 1. This problem set is a paired problem set.
 2. Play paper, scissors, rock to determine who goes first. Call that person *Partner 1*.
-    - Partner 1 (name and cnet ID):
-    - Partner 2 (name and cnet ID):
+    - Partner 1 (name and cnet ID): Xinyi Zhou (xzhou66)
+    - Partner 2 (name and cnet ID): Wuzhen Han (hanwuzhen)
 3. Partner 1 will accept the `ps4` and then share the link it creates with their partner. You can only share it with one partner so you will not be able to change it after your partner has accepted. 
 4. "This submission is our work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: xinyi wuzhen\*\*\_\_\*\* \*\*\_\_\*\*
 5. "I have uploaded the names of anyone else other than my partner and I worked with on the problem set **[here](https://docs.google.com/forms/d/185usrCREQaUbvAXpWhChkjghdGgmAZXA3lPWpXLLsts/edit)**" xyz wuzhen  (1 point)
-6. Late coins used this pset: xyz\*\*\_\_\*\* Late coins left after submission: xyz wuzhen\*\*\_\_\*\*
+6. Late coins used this pset: xinyi wuzhen\*\*\_\_\*\* Late coins left after submission: 3\*\*\_\_\*\*
 7. Knit your `ps4.qmd` to an PDF file to make `ps4.pdf`, 
     * The PDF should not be more than 25 pages. Use `head()` and re-size figures when appropriate. 
 8. (Partner 1): push  `ps4.qmd` and `ps4.pdf` to your github repo.
@@ -72,7 +72,7 @@ STATE_CD (State Code)
     This number appears reasonable given that the CMS dataset is known to include all hospitals eligible to bill Medicare.
 
 ## b.The number of short-term hospitals reported in the CMS POS dataset for 2016 is 7,245.  However, the Agency for Healthcare Research and Quality (AHRQ) reported 4,661 short-term acute care hospitals for the same year.  This difference might be because the CMS dataset includes all hospitals eligible to bill Medicare, while the AHRQ data only includes hospitals that meet specific criteria, like operating for at least 180 days.
-
+## Cite from: https://www.ahrq.gov/sites/default/files/wysiwyg/data/SyH-DR-stat-brief-3-financial-measures.pdf
 
 3. 
 
@@ -156,13 +156,7 @@ chart_unique_per_year.display()
 
 file_paths = ["pos2016.csv", "pos2017.csv", "pos2018.csv", "pos2019.csv"]
 
-dataframes = []
-for file_path in file_paths:
-    try:
-        df = pd.read_csv(file_path, encoding="utf-8")
-    except UnicodeDecodeError:
-        df = pd.read_csv(file_path, encoding="ISO-8859-1")
-    dataframes.append(df)
+dataframes = [pd.read_csv(file_path, encoding="latin1") for file_path in file_paths]
 
 active_code = 0
 short_term_category_code = 1
@@ -260,16 +254,15 @@ print(
     b. 
 
 ```{python}
-
 num_filtered_suspected_closures = filtered_suspected_closures_df.shape[0]
 print(
     f"Number of hospitals left after correcting for potential mergers/acquisitions: {num_filtered_suspected_closures}"
 )
 
 ```
+
     
     c.
-
 ```{python}
 filtered_suspected_closures_df["Year of Suspected Closure"] = 2019
 
@@ -532,7 +525,6 @@ else:
     a.
     ### Ans: The unit in the .prj file is Degree.
 
-
     b.
 
 ```{python}
@@ -559,7 +551,6 @@ else:
 ```
 
     c.
-
 ```{python}
 
 base_path = "/Users/cynthia/Desktop/gz_2010_us_860_00_500k"
@@ -596,7 +587,6 @@ plt.show()
 ## Effects of closures on access in Texas (15 pts)
 
 1. 
-
 ```{python}
 
 file_paths = ["pos2016.csv", "pos2017.csv", "pos2018.csv", "pos2019.csv"]
@@ -616,8 +606,8 @@ zip_closure_table = closures_zip.groupby('closure_count').size().reset_index(nam
 print(zip_closure_table)
 ```
 
-2. 
 
+2. 
 ```{python}
 pathshp = '~/Desktop/gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.shp'
 df_texas = gpd.read_file(pathshp)
@@ -627,7 +617,7 @@ df_texas['ZCTA5'] = df_texas['ZCTA5'].astype(str)
 map_texas = df_texas.merge(closures_zip, left_on='ZCTA5', right_on='ZIP_CD', how='left')
 map_texas['closure_count'] = map_texas['closure_count'].fillna(0)
 
-fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+fig, ax = plt.subplots(1, 1, figsize=(8, 6))
 map_texas.plot(column='closure_count', cmap='OrRd', linewidth=0.8, ax=ax, edgecolor='0.8', legend=True)
 ax.set_title('Texas ZIP Codes Directly Affected by Hospital Closures (2016-2019)', fontsize=15)
 plt.axis('off')
@@ -637,7 +627,11 @@ directly_affected_zip_count = closures_zip.shape[0]
 print(f"Number of directly affected ZIP codes in Texas: {directly_affected_zip_count}")
 ```
 
+```
 3. 
+
+```
+
 ```{python}
 directly_affected_gdf = df_texas[df_texas['ZCTA5'].isin(closures_zip['ZIP_CD'])].copy()
 
@@ -649,10 +643,9 @@ indirectly_affected_gdf = gpd.sjoin(df_texas, directly_affected_gdf, how='inner'
 indirectly_affected_zip_count = indirectly_affected_gdf['ZCTA5_left'].nunique()
 
 print(f"Number of indirectly affected ZIP codes in Texas: {indirectly_affected_zip_count}")
-
 ```
-4. 
 
+4. 
 ```{python}
 indirectly_affected_gdf = indirectly_affected_gdf[~indirectly_affected_gdf['ZCTA5_left'].isin(closures_zip['ZIP_CD'])]
 
@@ -660,9 +653,9 @@ df_texas['category'] = 'Not Affected'
 df_texas.loc[df_texas['ZCTA5'].isin(closures_zip['ZIP_CD']), 'category'] = 'Directly Affected'
 df_texas.loc[df_texas['ZCTA5'].isin(indirectly_affected_gdf['ZCTA5_left']), 'category'] = 'Indirectly Affected'
 
-fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+fig, ax = plt.subplots(1, 1, figsize=(8, 6))
 df_texas.plot(column='category', cmap='Set1', linewidth=0.8, ax=ax, edgecolor='0.8', legend=True)
-ax.set_title('Texas ZIP Codes Affected by Hospital Closures (2016-2019)', fontsize=15)
+ax.set_title('Texas ZIP Codes Affected by Hospital Closures (2016-2019)', fontsize=12)
 plt.axis('off')
 plt.show()
 
@@ -675,7 +668,7 @@ print(f"Number of indirectly affected ZIP codes in Texas: {indirectly_affected_z
 ```
 
 ## Reflecting on the exercise (10 pts) 
-## Partner 1：The initial method for identifying hospital closures has several problems that could lead to mistakes. One issue is that mergers or acquisitions might be wrongly marked as closures. Hospitals that merge or are bought may get new certification numbers, which could make it seem like they closed. To improve accuracy, we could better match hospital names and addresses to identify these cases. Another issue is data delays or inconsistencies so hospitals might temporarily disappear from the data without actually closing.  Using additional data sources, like state databases, could help verify if a hospital is really closed. Relying on just one field, such as the "Termination Code," can also be risky, because errors in that field could lead to wrong conclusions.  It would be better to also consider other information, like staffing levels or available services. Some hospitals may also relocate rather than close, which could be misinterpreted as a closure. Using location data to track these changes could help. Finally, verifying closures using official sources would reduce false positives and make the analysis more reliable.
+## Partner 1: The initial method for identifying hospital closures has several problems that could lead to mistakes. One issue is that mergers or acquisitions might be wrongly marked as closures. Hospitals that merge or are bought may get new certification numbers, which could make it seem like they closed. To improve accuracy, we could better match hospital names and addresses to identify these cases. Another issue is data delays or inconsistencies so hospitals might temporarily disappear from the data without actually closing.  Using additional data sources, like state databases, could help verify if a hospital is really closed. Relying on just one field, such as the "Termination Code," can also be risky, because errors in that field could lead to wrong conclusions.  It would be better to also consider other information, like staffing levels or available services. Some hospitals may also relocate rather than close, which could be misinterpreted as a closure. Using location data to track these changes could help. Finally, verifying closures using official sources would reduce false positives and make the analysis more reliable.
 
 ## Partner 2: The current way of identifying zip codes affected by hospital closures has some limitations. Just using distance to decide if a zip code is directly or indirectly affected may not fully capture changes in access to healthcare.  For example, two zip codes within 10 miles of a closed hospital might be affected differently depending on factors like transportation options, population density, and nearby healthcare facilities. Using only distance doesn't tell the whole story. There are some ways to improve this measure. First, include transportation factors like road access and public transit, because these influence how easily people can get to hospitals. Second, consider the capacity of nearby hospitals to handle more patients, as closures might lead to overcrowding.  Third, include population density and demographics to understand which areas might be impacted the most. Also, consider travel time cause it can provide a better sense of accessibility, especially in rural areas. Finally, take into account other healthcare facilities like clinic centers to get a more complete picture of healthcare availability after a hospital closure.
 
