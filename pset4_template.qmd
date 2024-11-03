@@ -7,6 +7,7 @@ format:
        text: |
          \usepackage{fvextra}
          \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+         \usepackage[margin=1.75cm]{geometry} 
 include-before-body:
   text: |
     \RecustomVerbatimEnvironment{verbatim}{Verbatim}{
@@ -50,7 +51,6 @@ PRVDR_NUM (CMS Certification Number)
 FAC_NAME (Facility Name)
 ZIP_CD (Address: Zip Code)
 PGM_TRMNTN_CD (Terpmination Code)
-TRMNTN_EXPRTN_DT (Termination Expiration Date)
 STATE_CD (State Code)
 
 2. 
@@ -343,7 +343,6 @@ print(
 2. 
 
 ```{python}
-import matplotlib.pyplot as plt
 import geopandas as gpd
 
 pathshp = os.path.join(base_path, "gz_2010_us_860_00_500k.shp")
@@ -369,7 +368,7 @@ hospital_zip = hospital_2016.groupby("ZIP_CD").size().reset_index(name="hospital
 map_texas = df_texas.merge(hospital_zip, left_on="ZCTA5", right_on="ZIP_CD", how="left")
 map_texas["hospital_count"] = map_texas["hospital_count"].fillna(0)
 
-fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+fig, ax = plt.subplots(1, 1, figsize=(8, 10))
 map_texas.plot(
     column="hospital_count",
     cmap="viridis",
@@ -377,10 +376,15 @@ map_texas.plot(
     ax=ax,
     edgecolor="0.8",
     legend=True,
+    legend_kwds={
+        'shrink': 0.5,  
+        'label': "Number of Hospitals" 
+    },
 )
-ax.set_title("Number of Hospitals per ZIP Code in Texas (2016)", fontsize=15)
+ax.set_title("Number of Hospitals per ZIP Code in Texas (2016)", fontsize=10)
 plt.axis("off")
 plt.show()
+
 
 ```
 
@@ -599,20 +603,25 @@ df_texas_distance = df_texas.merge(
 
 df_texas_distance["Nearest_Hospital_Distance_Miles"] = df_texas_distance["Nearest_Hospital_Distance_Miles"].fillna(0)
 
-fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+fig, ax = plt.subplots(1, 1, figsize=(8, 10))
 df_texas_distance.plot(
     column="Nearest_Hospital_Distance_Miles",
-    cmap="OrRd",  
+    cmap="OrRd",
     linewidth=0.8,
     ax=ax,
     edgecolor="0.8",
     legend=True,
+    legend_kwds={
+        'shrink': 0.5,  
+        'label': "Distance (miles)" 
+    },
 )
 
-ax.set_title("Distance to Nearest Hospital by Zip Code in Texas (in Miles)", fontsize=15)
+ax.set_title("Distance to Nearest Hospital by Zip Code in Texas (in Miles)", fontsize=10)
 plt.axis("off")
 
 plt.show()
+
 ```
     
 ## Effects of closures on access in Texas (15 pts)
@@ -620,9 +629,10 @@ plt.show()
 1. 
 
 ```{python}
-
-columns_to_drop = [col for col in filtered_suspected_closures_df.columns if 'STATE_CD' in col]
-filtered_suspected_closures_df = filtered_suspected_closures_df.drop(columns=columns_to_drop, errors='ignore')
+columns_to_drop = [
+    col for col in filtered_suspected_closures_df.columns if 'STATE_CD' in col]
+filtered_suspected_closures_df = filtered_suspected_closures_df.drop(
+    columns=columns_to_drop, errors='ignore')
 
 filtered_suspected_closures_df = filtered_suspected_closures_df.merge(
     dataframes[0][['PRVDR_NUM', 'STATE_CD']],
@@ -630,16 +640,24 @@ filtered_suspected_closures_df = filtered_suspected_closures_df.merge(
     how='left'
 )
 
-state_column = 'STATE_CD' 
-texas_closures_df = filtered_suspected_closures_df[filtered_suspected_closures_df[state_column] == 'TX'].copy()
+state_column = 'STATE_CD'
+texas_closures_df = filtered_suspected_closures_df[filtered_suspected_closures_df[state_column] == 'TX'].copy(
+)
 
-texas_closures_df['ZIP Code'] = texas_closures_df['ZIP Code'].astype(str).str.zfill(5)
+texas_closures_df['ZIP Code'] = texas_closures_df['ZIP Code'].astype(
+    str).str.zfill(5)
 
-closures_per_zip = texas_closures_df.groupby('ZIP Code').size().reset_index(name='closure_count')
-
+closures_per_zip = texas_closures_df.groupby(
+    'ZIP Code').size().reset_index(name='closure_count')
 closures_per_zip = closures_per_zip.rename(columns={"ZIP Code": "ZIP_CD"})
 
+closures_per_zip['ZIP_CD'] = closures_per_zip['ZIP_CD'].astype(
+    str).str.replace(r'\.0$', '', regex=True).str.zfill(5)
+
 closures_per_zip = closures_per_zip.sort_values(by='ZIP_CD')
+
+closures_per_zip.reset_index(inplace=True)
+closures_per_zip.rename(columns={"index": " "}, inplace=True)
 
 print(closures_per_zip.to_string(index=False))
 
@@ -647,63 +665,86 @@ print(closures_per_zip.to_string(index=False))
 
 2. 
 
-
 ```{python}
-shapefile_path = '/Users/cynthia/Desktop/gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.shp'
-df_zipcodes = gpd.read_file(shapefile_path)
 
-# Merge shapefile data with closure counts
+df_texas = df_shp[df_shp["ZCTA5"].str.startswith(
+    ("75", "76", "77", "78", "79"))].copy()
+
+df_texas['ZCTA5'] = df_texas['ZCTA5'].astype(str).str.zfill(5)
+
+closures_per_zip['ZIP_CD'] = closures_per_zip['ZIP_CD'].astype(
+    str).str.zfill(5)
+
 map_closures_texas = df_texas.merge(
-    closures_texas_count, left_on='ZCTA5', right_on='ZIP_CD', how='left')
-map_closures_texas['closure_count'] = map_closures_texas['closure_count'].fillna(0)
+    closures_per_zip, left_on='ZCTA5', right_on='ZIP_CD', how='left'
+)
+map_closures_texas['closure_count'] = map_closures_texas['closure_count'].fillna(
+    0)
 
-# plot a choropleth
-map_closures_texas.plot(column='closure_count', legend=True).set_axis_off()
-plt.title('Texas Zip Codes Affected by Hospital Closures (2016-2019)', fontsize=12)
+fig, ax = plt.subplots(1, 1, figsize=(8, 10))
+map_closures_texas.plot(
+    column='closure_count',
+    cmap='Reds',
+    legend=True,
+    ax=ax,
+    linewidth=0.8,
+    edgecolor='0.8',
+    legend_kwds={
+        'shrink': 0.5, 
+    }
+)
+ax.set_axis_off()
+plt.title('Texas Zip Codes Affected by Hospital Closures (2016-2019)', fontsize=10)
 plt.show()
 
-# number of directly affected zip codes in Texas
-directly_zip_count = closures_texas_count.shape[0]
 
-print(f"The number of directly affected zip codes in Texas is {directly_zip_count}.")
-
+directly_zip_count = closures_per_zip.shape[0]
+print(
+    f"The number of directly affected zip codes in Texas is {directly_zip_count}.")
 
 ```
 
 3. 
 
 ```{python}
-directly_affected_gdf = df_texas[df_texas['ZCTA5'].isin(closures_zip['ZIP_CD'])].copy()
+direct_closures_texas_gdf = df_texas.merge(
+    closures_per_zip, left_on='ZCTA5', right_on='ZIP_CD', how='inner'
+)
 
-directly_affected_gdf = directly_affected_gdf.to_crs(epsg=3395)
-directly_affected_gdf['geometry'] = directly_affected_gdf.geometry.buffer(16093.4)
-directly_affected_gdf = directly_affected_gdf.to_crs(epsg=4326) 
+direct_closures_texas_gdf = direct_closures_texas_gdf.to_crs(epsg=3395)
 
-indirectly_affected_gdf = gpd.sjoin(df_texas, directly_affected_gdf, how='inner', predicate='intersects')
-indirectly_affected_zip_count = indirectly_affected_gdf['ZCTA5_left'].nunique()
+closures_buffer = direct_closures_texas_gdf.copy()
+closures_buffer['geometry'] = closures_buffer.geometry.buffer(16093)
 
-print(f"Number of indirectly affected ZIP codes in Texas: {indirectly_affected_zip_count}")
+closures_buffer = closures_buffer.to_crs(df_texas.crs)
+
+indirectly_zip = gpd.sjoin(df_texas, closures_buffer,
+                           how="inner", predicate="intersects")
+
+indirectly_zip = indirectly_zip[~indirectly_zip['ZCTA5_left'].isin(
+    direct_closures_texas_gdf.to_crs(df_texas.crs)['ZCTA5'])]
+
+indirectly_zip_count = indirectly_zip['ZCTA5_left'].nunique()
+print(
+    f"The number of indirectly affected zip codes in Texas is {indirectly_zip_count}.")
+
 ```
 
 4. 
 ```{python}
-indirectly_affected_gdf = indirectly_affected_gdf[~indirectly_affected_gdf['ZCTA5_left'].isin(closures_zip['ZIP_CD'])]
 
 df_texas['category'] = 'Not Affected'
-df_texas.loc[df_texas['ZCTA5'].isin(closures_zip['ZIP_CD']), 'category'] = 'Directly Affected'
-df_texas.loc[df_texas['ZCTA5'].isin(indirectly_affected_gdf['ZCTA5_left']), 'category'] = 'Indirectly Affected'
+df_texas.loc[df_texas['ZCTA5'].isin(direct_closures_texas_gdf.to_crs(
+    df_texas.crs)['ZCTA5']), 'category'] = 'Directly Affected'
+df_texas.loc[df_texas['ZCTA5'].isin(
+    indirectly_zip['ZCTA5_left']), 'category'] = 'Indirectly Affected'
 
-fig, ax = plt.subplots(1, 1, figsize=(8, 6))
-df_texas.plot(column='category', cmap='Set1', linewidth=0.8, ax=ax, edgecolor='0.8', legend=True)
-ax.set_title('Texas ZIP Codes Affected by Hospital Closures (2016-2019)', fontsize=12)
+fig, ax = plt.subplots(1, 1, figsize=(8, 10))
+df_texas.plot(column='category', ax=ax, legend=True,
+              cmap='Set1', linewidth=0.8, edgecolor='0.8')
+plt.title('Texas Zip Codes Affected by Hospital Closures (2016-2019)', fontsize=10)
 plt.axis('off')
 plt.show()
-
-directly_affected_zip_count = closures_zip.shape[0]
-indirectly_affected_zip_count = indirectly_affected_gdf['ZCTA5_left'].nunique()
-
-print(f"Number of directly affected ZIP codes in Texas: {directly_affected_zip_count}")
-print(f"Number of indirectly affected ZIP codes in Texas: {indirectly_affected_zip_count}")
 
 ```
 
